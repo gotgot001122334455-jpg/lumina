@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String         @id @default(auto()) @map("_id") @db.ObjectId
+  email              String         @unique
+  passwordHash       String
+  fullName           String
+  accountNumber      String?        @unique
+  country            String?
+  role               String         @default("USER") // USER or ADMIN
+  kycStatus          String         @default("NONE") // NONE, PENDING, APPROVED, REJECTED
+  accountStatus      String         @default("INACTIVE") // ACTIVE, INACTIVE
+  twoFactorSecret    String?
+  isTwoFactorEnabled Boolean        @default(false)
+  annualIncome       String?
+  accountType        String? // SAVINGS or CHECKING
+  sourceOfIncome     String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  transactions  Transaction[]
+  kycRequests   KycRequest[]
+  notifications Notification[]
+  devices       Device[]
+  wallets       Wallet[]
+}
+
+model Wallet {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  currency  String
+  balance   Float    @default(0.0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, currency])
+}
+
+model Transaction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  type        String // DEPOSIT, WITHDRAW, TRANSFER
+  amount      Float
+  currency    String   @default("USD")
+  status      String   @default("PENDING") // PENDING, APPROVED, DECLINED, FAILED
+  destination String // e.g., "@username", "IBAN...", "paypal@..."
+  recipientId String?  @db.ObjectId // Used for pending internal transfers
+  adminReason String? // Reason if declined
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model KycRequest {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  documentData String // e.g. path or mock data for ID
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Device {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  userAgent  String
+  ipAddress  String
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Setting {
+  key   String @id @map("_id")
+  value String
+}
