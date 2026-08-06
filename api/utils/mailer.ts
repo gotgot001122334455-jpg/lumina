@@ -268,5 +268,39 @@ export const templates = {
         </div>
       `
     );
-  }
+  },
+
+  kycApproved: (name: string) => emailLayout(
+    'Verification Approved',
+    `
+      <p>Hi <strong>${name}</strong>,</p>
+      <p>We are pleased to inform you that your Identity Verification (KYC) request has been successfully reviewed and <strong>Approved</strong>.</p>
+      <p>Your Lumina Bank account is now fully active. You can now perform transactions, deposits, and withdraw funds without restrictions.</p>
+      <div style="margin: 30px 0; text-align: center;">
+        <a href="http://localhost:3000/dashboard" style="display: inline-block; background-color: #34d399; color: #000000; font-weight: 700; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-size: 14px;">
+          Access Dashboard
+        </a>
+      </div>
+      <p style="font-size: 13px; color: #9ca3af; margin-top: 25px;">Thank you for your cooperation in keeping our platform secure.</p>
+    `
+  ),
+
+  kycRejected: (name: string, reason?: string) => emailLayout(
+    'Verification Action Required',
+    `
+      <p>Hi <strong>${name}</strong>,</p>
+      <p>We regret to inform you that your Identity Verification (KYC) request has been reviewed and <strong>Rejected</strong>.</p>
+      ${reason ? `
+      <div style="margin-top: 15px; padding: 12px; background-color: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; color: #f87171; font-size: 14px;">
+        <strong>Reason for rejection:</strong> ${reason}
+      </div>
+      ` : ''}
+      <p>To reactivate your onboarding process, please review the document requirements and submit valid identification.</p>
+      <div style="margin: 30px 0; text-align: center;">
+        <a href="http://localhost:3000/dashboard/kyc" style="display: inline-block; background-color: #ffffff; color: #000000; font-weight: 700; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-size: 14px;">
+          Re-submit KYC
+        </a>
+      </div>
+    `
+  )
 };

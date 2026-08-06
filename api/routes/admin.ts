@@ -2,6 +2,7 @@ import { Router } from 'express';
 import prisma from '../db';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 import { sendTransactionEmail } from '../email';
+import { sendEmail, templates } from '../utils/mailer';
 
 const router = Router();
 
@@ -247,9 +248,12 @@ router.get('/kyc/pending', async (req, res) => {
 router.post('/kyc/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // 'APPROVED' or 'REJECTED'
+    const { status, reason } = req.body; // 'APPROVED' or 'REJECTED'
 
-    const kyc = await prisma.kycRequest.findUnique({ where: { id } });
+    const kyc = await prisma.kycRequest.findUnique({ 
+      where: { id },
+      include: { user: true }
+    });
     if (!kyc) return res.status(404).json({ error: 'KYC not found' });
 
     await prisma.$transaction([
@@ -262,6 +266,45 @@ router.post('/kyc/:id', async (req, res) => {
         data: { kycStatus: status }
       })
     ]);
+
+    // Send notifications and emails
+    try {
+      if (status === 'APPROVED') {
+        // Send email
+        await sendEmail(
+          kyc.user.email,
+          'Identity Verification Approved',
+          templates.kycApproved(kyc.user.fullName)
+        );
+
+        // In-app notification
+        await prisma.notification.create({
+          data: {
+            userId: kyc.userId,
+            title: 'KYC Approved',
+            message: 'Your identity verification has been approved. Your account is now fully active.'
+          }
+        });
+      } else if (status === 'REJECTED') {
+        // Send email
+        await sendEmail(
+          kyc.user.email,
+          'Identity Verification Action Required',
+          templates.kycRejected(kyc.user.fullName, reason)
+        );
+
+        // In-app notification
+        await prisma.notification.create({
+          data: {
+            userId: kyc.userId,
+            title: 'KYC Rejected',
+            message: `Your identity verification was rejected. Reason: ${reason || 'Invalid documents'}`
+          }
+        });
+      }
+    } catch (notifErr) {
+      console.error('Failed to dispatch KYC status update notifications:', notifErr);
+    }
 
     res.json({ success: true });
   } catch (error) {
