@@ -35,6 +35,15 @@ router.post('/register', async (req, res) => {
     const count = await prisma.user.count();
     const role = count === 0 ? 'ADMIN' : 'USER';
 
+    // Generate unique 8-digit account number
+    let accountNumber = '';
+    let isUnique = false;
+    while (!isUnique) {
+      accountNumber = Math.floor(10000000 + Math.random() * 90000000).toString();
+      const exists = await prisma.user.findUnique({ where: { accountNumber } });
+      if (!exists) isUnique = true;
+    }
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -42,21 +51,20 @@ router.post('/register', async (req, res) => {
         fullName,
         country,
         role,
+        accountNumber,
       }
     });
 
     const primaryCurrency = getCurrencyFromCountry(country);
     const initialCurrencies = Array.from(new Set([primaryCurrency, 'USD', 'EUR', 'GBP', 'NGN']));
 
-    await Promise.all(initialCurrencies.map(currency => 
-      prisma.wallet.create({
-        data: {
-          userId: user.id,
-          currency,
-          balance: 0.0
-        }
-      })
-    ));
+    await prisma.wallet.createMany({
+      data: initialCurrencies.map(currency => ({
+        userId: user.id,
+        currency,
+        balance: 0.0
+      }))
+    });
 
     const finalUser = await prisma.user.findUnique({ where: { id: user.id }, include: { wallets: true } });
 
@@ -69,12 +77,11 @@ router.post('/register', async (req, res) => {
       }
     });
 
-    // Send welcome email
-    try {
-      await sendEmail(user.email, 'Welcome to Lumina Bank', templates.registrationWelcome(user.fullName));
-    } catch (emailErr) {
-      console.error('Welcome email failed to send:', emailErr);
-    }
+    // Send welcome email asynchronously so it doesn't block the user registration response
+    sendEmail(user.email, 'Welcome to Lumina Bank', templates.registrationWelcome(user.fullName))
+      .catch(emailErr => {
+        console.error('Welcome email failed to send:', emailErr);
+      });
 
     const token = jwt.sign(
       { id: user.id, role: user.role },
