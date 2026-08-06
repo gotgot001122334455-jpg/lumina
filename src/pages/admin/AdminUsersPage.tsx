@@ -7,6 +7,23 @@ import { Button } from '@/components/ui/button';
 
 const getFileUrl = (path: string) => {
   if (!path) return '';
+  
+  // Handle mock uploads with realistic Unsplash placeholders
+  if (path.includes('/mock-uploads/')) {
+    if (path.includes('front') || path.includes('elon')) {
+      return 'https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&w=800&q=80'; // Mock ID
+    }
+    if (path.includes('back') || path.includes('davido')) {
+      return 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=800&q=80'; // Back document
+    }
+    if (path.includes('selfie') || path.includes('download')) {
+      return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80'; // Portrait/Selfie
+    }
+    if (path.includes('proof') || path.includes('speed')) {
+      return 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?auto=format&fit=crop&w=800&q=80'; // Utility bill/Proof
+    }
+  }
+
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   return (api.defaults.baseURL?.replace('/api', '') || '') + path;
 };
