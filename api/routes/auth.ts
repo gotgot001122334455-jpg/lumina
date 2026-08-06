@@ -69,6 +69,13 @@ router.post('/register', async (req, res) => {
       }
     });
 
+    // Send welcome email
+    try {
+      await sendEmail(user.email, 'Welcome to Lumina Bank', templates.registrationWelcome(user.fullName));
+    } catch (emailErr) {
+      console.error('Welcome email failed to send:', emailErr);
+    }
+
     const token = jwt.sign(
       { id: user.id, role: user.role },
       JWT_SECRET, { expiresIn: '7d' });

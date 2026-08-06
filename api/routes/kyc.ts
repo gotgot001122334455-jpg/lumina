@@ -128,13 +128,11 @@ router.post('/submit', authenticate, upload.fields([
       }
     });
 
-    // Send welcome email with generated account details
-    if (generatedNew) {
-      try {
-        await sendEmail(user.email, 'Welcome to Lumina Bank', templates.welcome(user.fullName, accountNumber));
-      } catch (emailErr) {
-        console.error('Welcome email failed to send:', emailErr);
-      }
+    // Send KYC submission email with account details
+    try {
+      await sendEmail(user.email, 'Identity Verification (KYC) Submitted', templates.kycSubmitted(user.fullName, accountNumber!));
+    } catch (emailErr) {
+      console.error('KYC submission email failed to send:', emailErr);
     }
 
     res.json({ kycRequest });

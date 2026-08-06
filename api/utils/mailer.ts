@@ -102,33 +102,171 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
   }
 };
 
-// Very simple email templates matching Lumina Bank branding
+const emailLayout = (title: string, bodyContent: string) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #050505;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 40px 0; background-color: #050505; color: #e5e7eb;">
+  <div style="max-width: 550px; margin: 0 auto; background-color: #0d0d0d; border: 1px solid #1f1f1f; border-radius: 16px; padding: 40px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.65);">
+    <!-- Logo/Header -->
+    <div style="text-align: center; margin-bottom: 35px; border-bottom: 1px solid #1f1f1f; padding-bottom: 25px;">
+      <span style="font-size: 22px; font-weight: 800; letter-spacing: 3px; color: #ffffff; text-transform: uppercase;">
+        LUMINA<span style="color: #60a5fa;">.</span>BANK
+      </span>
+    </div>
+    
+    <!-- Title -->
+    <h2 style="font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 0; margin-bottom: 20px; text-align: left;">
+      ${title}
+    </h2>
+    
+    <!-- Body Content -->
+    <div style="font-size: 15px; line-height: 1.6; color: #d1d5db;">
+      ${bodyContent}
+    </div>
+    
+    <!-- Footer -->
+    <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #1f1f1f; text-align: center; font-size: 12px; color: #6b7280; line-height: 1.5;">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} Lumina Bank. All rights reserved.</p>
+      <p style="margin: 5px 0 0 0;">This is an automated security notification. Please do not reply directly to this email.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+// Beautiful, premium email templates matching Lumina Bank dark theme branding
 export const templates = {
-  welcome: (name: string, accountNumber: string) => `
-    <div style="font-family: Arial, sans-serif; max-w-lg mx-auto; background-color: #0d1117; color: #fff; padding: 25px; border-radius: 12px; border: 1px solid #30363d;">
-      <h1 style="color: #6366f1; margin-top: 0;">Welcome to Lumina Bank</h1>
-      <p>Hi ${name},</p>
-      <p>Your onboarding profile setup has been successfully completed! We have generated your official bank account details:</p>
-      <div style="background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center;">
-        <span style="display: block; font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Your Account Number</span>
-        <span style="font-size: 24px; color: #58a6ff; font-weight: bold; font-family: monospace; letter-spacing: 2px;">${accountNumber}</span>
+  registrationWelcome: (name: string) => emailLayout(
+    'Welcome to Lumina Bank',
+    `
+      <p>Hi <strong>${name}</strong>,</p>
+      <p>Thank you for creating your account with Lumina Bank. We are thrilled to have you join our digital banking platform.</p>
+      <p>To fully activate your account features and secure your official bank account details, the next step is to submit your identity documents for compliance review.</p>
+      <div style="margin: 30px 0; text-align: center;">
+        <a href="http://localhost:3000/dashboard/kyc" style="display: inline-block; background-color: #ffffff; color: #000000; font-weight: 700; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-size: 14px; transition: background-color 0.2s;">
+          Verify Identity (KYC)
+        </a>
       </div>
-      <p>Our compliance team is currently reviewing your uploaded identity documents. Verification typically completes within 5-15 minutes.</p>
-      <p style="color: #8b949e; font-size: 12px; margin-top: 30px;">- The Lumina Bank Team</p>
-    </div>
-  `,
-  transferSent: (amount: number, recipient: string) => `
-    <div style="font-family: Arial, sans-serif; max-w-lg mx-auto; background-color: #0d1117; color: #fff; padding: 20px; border-radius: 10px;">
-      <h1 style="color: #6366f1;">Transfer Sent</h1>
-      <p>You have successfully sent <strong>$${amount.toFixed(2)}</strong> to ${recipient}.</p>
-      <p style="color: #8b949e; font-size: 12px; margin-top: 30px;">- The Lumina Bank Team</p>
-    </div>
-  `,
-  transferReceived: (amount: number, sender: string) => `
-    <div style="font-family: Arial, sans-serif; max-w-lg mx-auto; background-color: #0d1117; color: #fff; padding: 20px; border-radius: 10px;">
-      <h1 style="color: #6366f1;">Funds Received</h1>
-      <p>You have received a transfer of <strong>$${amount.toFixed(2)}</strong> from ${sender}.</p>
-      <p style="color: #8b949e; font-size: 12px; margin-top: 30px;">- The Lumina Bank Team</p>
-    </div>
-  `
+      <p style="font-size: 13px; color: #9ca3af; margin-top: 25px;">If you have any questions or require assistance setting up, please contact our support team.</p>
+    `
+  ),
+
+  kycSubmitted: (name: string, accountNumber: string) => emailLayout(
+    'Documents Received & Account Prepared',
+    `
+      <p>Hi <strong>${name}</strong>,</p>
+      <p>Thank you for completing your KYC verification. Our compliance team is currently reviewing your uploaded identity documents.</p>
+      <p>This process typically completes within 5-15 minutes. Once approved, you will have full access to transfer and withdraw funds.</p>
+      
+      <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 30px 0; text-align: center;">
+        <span style="display: block; font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">Your Official Account Number</span>
+        <span style="font-size: 26px; color: #ffffff; font-weight: 700; font-family: monospace; letter-spacing: 3px;">${accountNumber}</span>
+      </div>
+      
+      <p style="font-size: 13px; color: #9ca3af; margin-top: 25px;">We will notify you immediately via email and dashboard notifications once the review is finalized.</p>
+    `
+  ),
+
+  welcome: (name: string, accountNumber: string) => templates.kycSubmitted(name, accountNumber),
+
+  transferSent: (amount: number, recipient: string) => emailLayout(
+    'Transfer Processed',
+    `
+      <p>Hello,</p>
+      <p>Your transfer request has been successfully processed and sent.</p>
+      
+      <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 30px 0;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="color: #6b7280; padding: 6px 0;">Recipient</td>
+            <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">${recipient}</td>
+          </tr>
+          <tr>
+            <td style="color: #6b7280; padding: 6px 0;">Amount</td>
+            <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">$${amount.toFixed(2)}</td>
+          </tr>
+        </table>
+      </div>
+    `
+  ),
+
+  transferReceived: (amount: number, sender: string) => emailLayout(
+    'Funds Received',
+    `
+      <p>Hello,</p>
+      <p>You have successfully received a transfer into your account.</p>
+      
+      <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 30px 0;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="color: #6b7280; padding: 6px 0;">Sender</td>
+            <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">${sender}</td>
+          </tr>
+          <tr>
+            <td style="color: #6b7280; padding: 6px 0;">Amount Received</td>
+            <td style="color: #34d399; text-align: right; font-weight: 700; padding: 6px 0;">+$${amount.toFixed(2)}</td>
+          </tr>
+        </table>
+      </div>
+    `
+  ),
+
+  transactionStatus: (type: string, amount: number, status: string, reason?: string) => {
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+
+    let statusColor = '#ffffff';
+    if (status === 'APPROVED' || status === 'COMPLETED') statusColor = '#34d399';
+    if (status === 'DECLINED' || status === 'FAILED') statusColor = '#f87171';
+    if (status === 'PENDING') statusColor = '#fbbf24';
+
+    let extraDetails = '';
+    if (reason && status === 'DECLINED') {
+      extraDetails = `
+        <div style="margin-top: 15px; padding: 12px; background-color: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; color: #f87171; font-size: 13px;">
+          <strong>Decline Reason:</strong> ${reason}
+        </div>
+      `;
+    }
+
+    return emailLayout(
+      `Transaction ${status.charAt(0) + status.slice(1).toLowerCase()}`,
+      `
+        <p>Hello,</p>
+        <p>Your transaction has been processed with the following details:</p>
+        
+        <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 30px 0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <tr>
+              <td style="color: #6b7280; padding: 6px 0;">Transaction Type</td>
+              <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">${type}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 6px 0;">Amount</td>
+              <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">${formattedAmount}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 6px 0;">Status</td>
+              <td style="color: ${statusColor}; text-align: right; font-weight: 700; padding: 6px 0;">${status}</td>
+            </tr>
+          </table>
+          ${extraDetails}
+        </div>
+      `
+    );
+  }
 };
