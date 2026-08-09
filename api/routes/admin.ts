@@ -178,18 +178,38 @@ router.post('/transactions/:id/approve', async (req, res) => {
       
       const recipient = await prisma.user.findUnique({ where: { id: transaction.recipientId } });
       if (recipient) {
-        // For Recipient
+        // For Recipient (Credit)
         await prisma.notification.create({
           data: {
             userId: recipient.id,
-            title: 'Funds Received',
-            message: `You received a transfer of $${transaction.amount.toFixed(2)} from ${transaction.user.fullName}.`
+            title: 'Credit Alert',
+            message: `Your account was credited with $${transaction.amount.toFixed(2)} from ${transaction.user.fullName}.`
           }
         });
+        try {
+          await sendEmail(
+            recipient.email,
+            `Credit Alert: $${transaction.amount.toFixed(2)} Received from ${transaction.user.fullName}`,
+            templates.transferReceived(transaction.amount, transaction.user.fullName, transaction.currency)
+          );
+        } catch (e) {
+          console.error('Failed to send credit alert to recipient:', e);
+        }
       }
-    }
 
-    await sendTransactionEmail(transaction.user.email, transaction.type, transaction.amount, 'APPROVED');
+      // For Sender (Debit)
+      try {
+        await sendEmail(
+          transaction.user.email,
+          `Debit Alert: $${transaction.amount.toFixed(2)} Sent to ${recipient?.fullName || transaction.destination}`,
+          templates.transferSent(transaction.amount, recipient?.fullName || transaction.destination, transaction.currency)
+        );
+      } catch (e) {
+        console.error('Failed to send debit alert to sender:', e);
+      }
+    } else {
+      await sendTransactionEmail(transaction.user.email, transaction.type, transaction.amount, 'APPROVED');
+    }
 
     res.json({ transaction: updated });
   } catch (error) {

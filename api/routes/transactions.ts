@@ -105,25 +105,25 @@ router.post('/transfer', authenticate, async (req: AuthRequest, res) => {
 
     // Notifications and Emails
     if (status === 'APPROVED') {
-      // For Sender
+      // For Sender (Debit)
       await prisma.notification.create({
         data: {
           userId: user.id,
-          title: 'Transfer Sent',
-          message: `You successfully sent $${amount.toFixed(2)} to ${recipient.fullName}.`
+          title: 'Debit Alert',
+          message: `Your account was debited with $${amount.toFixed(2)} for a transfer to ${recipient.fullName}.`
         }
       });
-      await sendEmail(user.email, 'Transfer Sent', templates.transferSent(amount, recipient.fullName));
+      await sendEmail(user.email, `Debit Alert: $${amount.toFixed(2)} Sent to ${recipient.fullName}`, templates.transferSent(amount, recipient.fullName, currency));
 
-      // For Recipient
+      // For Recipient (Credit)
       await prisma.notification.create({
         data: {
           userId: recipient.id,
-          title: 'Funds Received',
-          message: `You received a transfer of $${amount.toFixed(2)} from ${user.fullName}.`
+          title: 'Credit Alert',
+          message: `Your account was credited with $${amount.toFixed(2)} from ${user.fullName}.`
         }
       });
-      await sendEmail(recipient.email, 'Funds Received', templates.transferReceived(amount, user.fullName));
+      await sendEmail(recipient.email, `Credit Alert: $${amount.toFixed(2)} Received from ${user.fullName}`, templates.transferReceived(amount, user.fullName, currency));
     } else {
       // Notify sender it's pending
       await prisma.notification.create({

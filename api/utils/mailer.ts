@@ -181,47 +181,87 @@ export const templates = {
 
   welcome: (name: string, accountNumber: string) => templates.kycSubmitted(name, accountNumber),
 
-  transferSent: (amount: number, recipient: string) => emailLayout(
-    'Transfer Processed',
-    `
-      <p>Hello,</p>
-      <p>Your transfer request has been successfully processed and sent.</p>
-      
-      <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 30px 0;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-          <tr>
-            <td style="color: #6b7280; padding: 6px 0;">Recipient</td>
-            <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">${recipient}</td>
-          </tr>
-          <tr>
-            <td style="color: #6b7280; padding: 6px 0;">Amount</td>
-            <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">$${amount.toFixed(2)}</td>
-          </tr>
-        </table>
-      </div>
-    `
-  ),
+  transferSent: (amount: number, recipient: string, currency: string = 'USD') => {
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency === 'USDT' || currency === 'BTC' ? 'USD' : (currency || 'USD')
+    }).format(amount);
 
-  transferReceived: (amount: number, sender: string) => emailLayout(
-    'Funds Received',
-    `
-      <p>Hello,</p>
-      <p>You have successfully received a transfer into your account.</p>
-      
-      <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 30px 0;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-          <tr>
-            <td style="color: #6b7280; padding: 6px 0;">Sender</td>
-            <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 6px 0;">${sender}</td>
-          </tr>
-          <tr>
-            <td style="color: #6b7280; padding: 6px 0;">Amount Received</td>
-            <td style="color: #34d399; text-align: right; font-weight: 700; padding: 6px 0;">+$${amount.toFixed(2)}</td>
-          </tr>
-        </table>
-      </div>
-    `
-  ),
+    return emailLayout(
+      'Debit Alert',
+      `
+        <p>Dear Customer,</p>
+        <p>We wish to inform you that a <strong>Debit transaction</strong> has occurred on your Lumina Bank account.</p>
+        
+        <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 25px 0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Transaction Type</td>
+              <td style="color: #f87171; text-align: right; font-weight: 700; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">DEBIT (Transfer)</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Amount Debited</td>
+              <td style="color: #f87171; text-align: right; font-weight: 700; padding: 8px 0; border-bottom: 1px solid #1f1f1f; font-size: 16px;">-${formatted}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Beneficiary</td>
+              <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">${recipient}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Currency</td>
+              <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">${currency}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;">Date & Time</td>
+              <td style="color: #9ca3af; text-align: right; font-weight: 500; padding: 8px 0;">${new Date().toUTCString()}</td>
+            </tr>
+          </table>
+        </div>
+        <p style="font-size: 13px; color: #9ca3af;">If you did not authorize this transaction, please contact our support team immediately.</p>
+      `
+    );
+  },
+
+  transferReceived: (amount: number, sender: string, currency: string = 'USD') => {
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency === 'USDT' || currency === 'BTC' ? 'USD' : (currency || 'USD')
+    }).format(amount);
+
+    return emailLayout(
+      'Credit Alert',
+      `
+        <p>Dear Customer,</p>
+        <p>We wish to inform you that a <strong>Credit transaction</strong> has occurred on your Lumina Bank account.</p>
+        
+        <div style="background-color: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin: 25px 0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Transaction Type</td>
+              <td style="color: #34d399; text-align: right; font-weight: 700; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">CREDIT (Direct Deposit)</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Amount Credited</td>
+              <td style="color: #34d399; text-align: right; font-weight: 700; padding: 8px 0; border-bottom: 1px solid #1f1f1f; font-size: 16px;">+${formatted}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Sender / Originator</td>
+              <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">${sender}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">Currency</td>
+              <td style="color: #ffffff; text-align: right; font-weight: 600; padding: 8px 0; border-bottom: 1px solid #1f1f1f;">${currency}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;">Date & Time</td>
+              <td style="color: #9ca3af; text-align: right; font-weight: 500; padding: 8px 0;">${new Date().toUTCString()}</td>
+            </tr>
+          </table>
+        </div>
+        <p style="font-size: 13px; color: #9ca3af;">These funds are now active and available in your wallet balance.</p>
+      `
+    );
+  },
 
   transactionStatus: (type: string, amount: number, status: string, reason?: string) => {
     const formattedAmount = new Intl.NumberFormat('en-US', {

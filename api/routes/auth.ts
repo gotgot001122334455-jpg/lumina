@@ -15,7 +15,7 @@ const getCurrencyFromCountry = (country: string) => {
     'US': 'USD', 'GB': 'GBP', 'CA': 'CAD', 'AU': 'AUD', 'EU': 'EUR',
     'JP': 'JPY', 'NG': 'NGN', 'ZA': 'ZAR', 'BR': 'BRL', 'IN': 'INR',
     'CN': 'CNY', 'MX': 'MXN', 'RU': 'RUB', 'KR': 'KRW', 'TR': 'TRY',
-    'SE': 'SEK'
+    'SE': 'SEK', 'KH': 'USD'
   };
   return map[country] || 'USD';
 };

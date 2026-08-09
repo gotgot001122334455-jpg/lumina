@@ -31,6 +31,7 @@ const COUNTRIES = [
   { code: 'KR', name: 'South Korea', flag: '🇰🇷' },
   { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
   { code: 'SE', name: 'Sweden', flag: '🇸🇪' },
+  { code: 'KH', name: 'Cambodia', flag: '🇰🇭' },
 ];
 
 export default function SignupPage() {
