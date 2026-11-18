@@ -31,6 +31,7 @@ import AdminOverview from '@/pages/admin/AdminOverview';
 import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import AdminTransactionsPage from '@/pages/admin/AdminTransactionsPage';
 import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
+import { SmartsuppWidget } from '@/components/SmartsuppWidget';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -90,6 +91,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <SmartsuppWidget />
       <AnimatedRoutes />
     </BrowserRouter>
   );

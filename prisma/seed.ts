@@ -15,6 +15,8 @@ async function main() {
   await upsertSetting('EMAIL_PROVIDER', 'BREVO');
   await upsertSetting('BREVO_API_KEY', process.env.BREVO_API_KEY || 'xkeysib-placeholder');
   await upsertSetting('SMTP_FROM', '"Lumina Bank" <team@theluminaonlinebanking.com>');
+  await upsertSetting('SMARTSUPP_KEY', process.env.SMARTSUPP_KEY || 'a29b1125935b9e4e98019434f0cfae05fa0ee5e8');
+  await upsertSetting('SMARTSUPP_ENABLED', 'true');
 
   console.log('Checking if admin user exists...');
   const existingAdminByEmail = await prisma.user.findUnique({

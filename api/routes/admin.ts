@@ -336,7 +336,10 @@ router.post('/kyc/:id', async (req, res) => {
 router.get('/settings', async (req, res) => {
   try {
     const settings = await prisma.setting.findMany();
-    const config: Record<string, string> = {};
+    const config: Record<string, string> = {
+      SMARTSUPP_KEY: process.env.SMARTSUPP_KEY || 'a29b1125935b9e4e98019434f0cfae05fa0ee5e8',
+      SMARTSUPP_ENABLED: 'true',
+    };
     settings.forEach(s => {
       config[s.key] = s.value;
     });

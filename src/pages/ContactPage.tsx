@@ -37,9 +37,23 @@ export default function ContactPage() {
                   {method.info && <p className="text-sm text-lumina-accent mt-2 font-medium">{method.info}</p>}
                   <p className="text-xs text-lumina-text-tertiary mt-1">{method.availability || method.response}</p>
                   <div className="mt-auto pt-6">
-                    <Link to="#" className={`inline-flex h-11 px-6 rounded-full items-center text-sm font-medium transition-all w-full justify-center ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}>
-                      {method.cta}
-                    </Link>
+                    {method.title === 'Live Chat' ? (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== 'undefined' && window.openSmartsuppChat) {
+                            window.openSmartsuppChat();
+                          }
+                        }}
+                        className={`inline-flex h-11 px-6 rounded-full items-center text-sm font-medium transition-all w-full justify-center ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}
+                      >
+                        {method.cta}
+                      </button>
+                    ) : (
+                      <Link to="#" className={`inline-flex h-11 px-6 rounded-full items-center text-sm font-medium transition-all w-full justify-center ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}>
+                        {method.cta}
+                      </Link>
+                    )}
                   </div>
                 </motion.div>
               </StaggerItem>

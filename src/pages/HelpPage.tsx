@@ -120,9 +120,23 @@ export default function HelpPage() {
                     <p className="text-base font-medium text-white">{method.title}</p>
                     <p className="text-xs text-lumina-text-secondary mt-1">{method.desc}</p>
                     <p className="text-xs text-lumina-text-tertiary mt-1">{method.info}</p>
-                    <Link to="/contact" className={`inline-flex h-10 px-5 rounded-full items-center text-xs font-medium mt-4 transition-all ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}>
-                      {method.cta}
-                    </Link>
+                    {method.title === 'Live Chat' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== 'undefined' && window.openSmartsuppChat) {
+                            window.openSmartsuppChat();
+                          }
+                        }}
+                        className={`inline-flex h-10 px-5 rounded-full items-center text-xs font-medium mt-4 transition-all ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}
+                      >
+                        {method.cta}
+                      </button>
+                    ) : (
+                      <Link to="/contact" className={`inline-flex h-10 px-5 rounded-full items-center text-xs font-medium mt-4 transition-all ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}>
+                        {method.cta}
+                      </Link>
+                    )}
                   </div>
                 ))}
               </div>

@@ -7,6 +7,29 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+// --- Public Settings (e.g. Smartsupp Chat Key) ---
+router.get('/public', async (req, res) => {
+  try {
+    const publicKeys = ['SMARTSUPP_KEY', 'SMARTSUPP_ENABLED'];
+    const settings = await prisma.setting.findMany({
+      where: { key: { in: publicKeys } }
+    });
+    const config: Record<string, string> = {
+      SMARTSUPP_KEY: process.env.SMARTSUPP_KEY || 'a29b1125935b9e4e98019434f0cfae05fa0ee5e8',
+      SMARTSUPP_ENABLED: 'true',
+    };
+    settings.forEach(s => {
+      config[s.key] = s.value;
+    });
+    res.json(config);
+  } catch (error) {
+    res.json({
+      SMARTSUPP_KEY: process.env.SMARTSUPP_KEY || 'a29b1125935b9e4e98019434f0cfae05fa0ee5e8',
+      SMARTSUPP_ENABLED: 'true',
+    });
+  }
+});
+
 // --- Profile Updates ---
 router.put('/profile', authenticate, async (req: AuthRequest, res) => {
   try {
