@@ -5,7 +5,8 @@ import {
   ArrowLeftRight, 
   Settings, 
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +15,7 @@ const ADMIN_NAV = [
   { title: 'Dashboard', url: '/adminxyz', icon: LayoutDashboard },
   { title: 'Users', url: '/adminxyz/users', icon: Users },
   { title: 'Transactions', url: '/adminxyz/transactions', icon: ArrowLeftRight },
+  { title: 'Live Chat (Smartsupp)', url: '/adminxyz/settings', icon: MessageSquare },
   { title: 'Settings', url: '/adminxyz/settings', icon: Settings },
 ];
 
@@ -105,6 +107,16 @@ export function AdminLayout() {
           
           <div className="hidden md:block">
             <h2 className="text-xl font-semibold text-white">System Administration</h2>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link 
+              to="/adminxyz/settings"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-all shadow-sm"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-orange-400" />
+              <span>Smartsupp Live Chat</span>
+            </Link>
           </div>
         </header>
 

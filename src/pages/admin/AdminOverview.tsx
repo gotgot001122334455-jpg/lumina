@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Activity, CreditCard } from 'lucide-react';
+import { Users, Activity, CreditCard, MessageSquare, ExternalLink, MessageCircle, Settings } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { openSmartsuppChat } from '@/lib/smartsupp';
 
 export default function AdminOverview() {
   const [walletEmail, setWalletEmail] = useState('');
@@ -15,16 +18,61 @@ export default function AdminOverview() {
   const [stats, setStats] = useState<{ totalUsers: number, pendingTransactions: number, balances: { currency: string, balance: number }[] }>({ totalUsers: 0, pendingTransactions: 0, balances: [] });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Smartsupp Quick Config State
+  const [smartsuppKey, setSmartsuppKey] = useState('');
+  const [smartsuppEnabled, setSmartsuppEnabled] = useState(true);
+  const [isSavingSmartsupp, setIsSavingSmartsupp] = useState(false);
+
   useEffect(() => {
-    fetchStats();
+    let ignore = false;
+
+    async function loadData() {
+      try {
+        const [statsRes, settingsRes] = await Promise.all([
+          api.get('/admin/overview'),
+          api.get('/admin/settings'),
+        ]);
+        if (!ignore) {
+          if (statsRes.data) setStats(statsRes.data);
+          if (settingsRes.data) {
+            setSmartsuppKey(settingsRes.data.SMARTSUPP_KEY || '');
+            setSmartsuppEnabled(settingsRes.data.SMARTSUPP_ENABLED !== 'false');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load admin overview:', error);
+      }
+    }
+
+    loadData();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  const fetchStats = async () => {
+  const refreshStats = async () => {
     try {
       const response = await api.get('/admin/overview');
       setStats(response.data);
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      console.error('Failed to refresh stats:', error);
+    }
+  };
+
+  const handleSaveSmartsupp = async () => {
+    setIsSavingSmartsupp(true);
+    try {
+      await api.post('/admin/settings', {
+        SMARTSUPP_KEY: smartsuppKey.trim(),
+        SMARTSUPP_ENABLED: smartsuppEnabled ? 'true' : 'false'
+      });
+      toast.success('Smartsupp key updated successfully!');
+      window.dispatchEvent(new CustomEvent('smartsupp:reload'));
+    } catch {
+      toast.error('Failed to update Smartsupp key');
+    } finally {
+      setIsSavingSmartsupp(false);
     }
   };
 
@@ -42,20 +90,35 @@ export default function AdminOverview() {
       toast.success(`Successfully credited ${creditCurrency} ${walletAmount} to ${walletEmail}`);
       setWalletEmail('');
       setWalletAmount('');
-      fetchStats(); // Refresh stats
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to credit wallet');
+      refreshStats();
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) && error.response?.data?.error
+        ? String(error.response.data.error)
+        : 'Failed to credit wallet';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const isSmartsuppActive = smartsuppEnabled && Boolean(smartsuppKey.trim());
+
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Admin Dashboard</h1>
-        <p className="text-lumina-text-secondary mt-1">System overview and quick actions.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Admin Dashboard</h1>
+          <p className="text-lumina-text-secondary mt-1">System overview and quick management actions.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link to="/adminxyz/settings">
+            <Button variant="outline" className="border-lumina-border text-white hover:bg-lumina-surface-light flex items-center gap-2">
+              <Settings size={16} />
+              Full System Settings
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats row */}
@@ -107,6 +170,85 @@ export default function AdminOverview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Prominent Smartsupp Live Chat Quick Management Card */}
+      <Card className="bg-lumina-surface border-lumina-border border-orange-500/30 shadow-lg shadow-orange-500/5">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg text-white">Smartsupp Live Chat Integration</CardTitle>
+                <CardDescription className="text-lumina-text-secondary">
+                  Configure and manage your live chat widget key directly from this dashboard.
+                </CardDescription>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {isSmartsuppActive ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Live & Connected
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                  Disabled / Unset
+                </span>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+            <div className="flex-1 space-y-2 w-full">
+              <Label htmlFor="smartsupp-key-input" className="text-lumina-text-secondary font-medium">
+                Smartsupp API / Project Key
+              </Label>
+              <Input
+                id="smartsupp-key-input"
+                type="text"
+                value={smartsuppKey}
+                onChange={(e) => setSmartsuppKey(e.target.value)}
+                placeholder="e.g. a29b1125935b9e4e98019434f0cfae05fa0ee5e8"
+                className="bg-lumina-bg border-lumina-border text-white font-mono"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 self-stretch sm:self-auto">
+              <Button
+                onClick={handleSaveSmartsupp}
+                disabled={isSavingSmartsupp}
+                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold flex-1 sm:flex-none"
+              >
+                {isSavingSmartsupp ? 'Saving...' : 'Save Smartsupp Key'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={openSmartsuppChat}
+                className="border-lumina-border text-white hover:bg-lumina-surface-light flex items-center gap-1.5"
+                title="Test Chat Widget"
+              >
+                <MessageCircle size={16} className="text-orange-400" />
+                Test Chat
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-lumina-text-secondary pt-2 border-t border-lumina-border/50 gap-2">
+            <p>
+              Get your key from <a href="https://app.smartsupp.com" target="_blank" rel="noreferrer" className="text-orange-400 hover:underline inline-flex items-center gap-0.5 font-medium">Smartsupp Dashboard <ExternalLink size={11} /></a> &rarr; Settings &rarr; Chat box &rarr; Chat code.
+            </p>
+            <Link to="/adminxyz/settings" className="text-indigo-400 hover:underline font-medium shrink-0">
+              Go to Full Admin Settings &rarr;
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Quick Action: Credit Wallet */}

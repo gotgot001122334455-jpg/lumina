@@ -6,6 +6,7 @@ import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerCo
 import { SectionHeader } from '@/components/SectionHeader';
 import { OFFICES } from '@/lib/constants';
 import { motion } from 'framer-motion';
+import { openSmartsuppChat } from '@/lib/smartsupp';
 
 const contactMethods = [
   { icon: MessageCircle, title: 'Live Chat', desc: 'Get instant help from our support team.', availability: 'Available 24/7', cta: 'Start chat', primary: true },
@@ -40,11 +41,7 @@ export default function ContactPage() {
                     {method.title === 'Live Chat' ? (
                       <button 
                         type="button"
-                        onClick={() => {
-                          if (typeof window !== 'undefined' && window.openSmartsuppChat) {
-                            window.openSmartsuppChat();
-                          }
-                        }}
+                        onClick={openSmartsuppChat}
                         className={`inline-flex h-11 px-6 rounded-full items-center text-sm font-medium transition-all w-full justify-center ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}
                       >
                         {method.cta}

@@ -5,6 +5,7 @@ import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerCo
 
 import { HELP_CATEGORIES, HELP_ARTICLES, VIDEO_TUTORIALS } from '@/lib/constants';
 import { motion } from 'framer-motion';
+import { openSmartsuppChat } from '@/lib/smartsupp';
 
 const iconMap: Record<string, React.ElementType> = {
   rocket: Rocket, 'credit-card': CreditCard, send: Send, wallet: Wallet,
@@ -123,11 +124,7 @@ export default function HelpPage() {
                     {method.title === 'Live Chat' ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          if (typeof window !== 'undefined' && window.openSmartsuppChat) {
-                            window.openSmartsuppChat();
-                          }
-                        }}
+                        onClick={openSmartsuppChat}
                         className={`inline-flex h-10 px-5 rounded-full items-center text-xs font-medium mt-4 transition-all ${method.primary ? 'bg-lumina-accent text-lumina-bg hover:bg-lumina-accent-dark' : 'border border-lumina-border text-white hover:border-lumina-border-hover'}`}
                       >
                         {method.cta}

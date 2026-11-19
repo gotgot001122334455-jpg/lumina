@@ -6,6 +6,7 @@ import {
   User, 
   LogOut,
   ArrowRightLeft,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -79,6 +80,15 @@ export function DashboardLayout() {
         </div>
 
         <div className="p-4 border-t border-lumina-border">
+          {user?.role === 'ADMIN' && (
+            <Link 
+              to="/adminxyz"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 mb-3 border border-red-500/20 shadow-sm"
+            >
+              <ShieldAlert className="w-5 h-5 text-red-400" />
+              Admin Portal
+            </Link>
+          )}
           <Link 
             to="/login"
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-lumina-text-secondary hover:bg-lumina-danger/10 hover:text-lumina-danger"

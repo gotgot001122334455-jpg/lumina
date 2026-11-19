@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MessageSquare, Eye, EyeOff, ExternalLink, CheckCircle2, MessageCircle, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+import { openSmartsuppChat } from '@/lib/smartsupp';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Record<string, string>>({
@@ -29,20 +30,28 @@ export default function AdminSettingsPage() {
   const [copiedKey, setCopiedKey] = useState(false);
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    let ignore = false;
 
-  const fetchSettings = async () => {
-    try {
-      const res = await api.get('/admin/settings');
-      if (res.data) {
-        setSettings(prev => ({ ...prev, ...res.data }));
+    async function fetchSettings() {
+      try {
+        const res = await api.get('/admin/settings');
+        if (!ignore && res.data) {
+          setSettings(prev => ({ ...prev, ...res.data }));
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error(err);
+          toast.error('Failed to load settings');
+        }
       }
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to load settings');
     }
-  };
+
+    fetchSettings();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleSave = async (payloadToSave?: Record<string, string>) => {
     setIsLoading(true);
@@ -85,12 +94,8 @@ export default function AdminSettingsPage() {
       toast.error('Please enter a Smartsupp API key first.');
       return;
     }
-    if (typeof window !== 'undefined' && window.openSmartsuppChat) {
-      window.openSmartsuppChat();
-      toast.success('Opening Smartsupp chat box...');
-    } else {
-      toast.info('Chat loader is initializing. Please wait a moment.');
-    }
+    openSmartsuppChat();
+    toast.success('Opening Smartsupp chat box...');
   };
 
   const isSmartsuppActive = settings.SMARTSUPP_ENABLED !== 'false' && Boolean(settings.SMARTSUPP_KEY?.trim());
@@ -100,7 +105,7 @@ export default function AdminSettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Admin Settings</h1>
-          <p className="text-lumina-text-secondary mt-1">Configure global system parameters, integrations, and communication.</p>
+          <p className="text-lumina-text-secondary mt-1">Configure live chat, global flags, and email services.</p>
         </div>
         <Button 
           onClick={() => handleSave()} 
@@ -112,56 +117,8 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="flex flex-col gap-6">
-        {/* Global System Flags */}
-        <Card className="bg-lumina-surface border-lumina-border">
-          <CardHeader>
-            <CardTitle className="text-lg text-white">Global System Flags</CardTitle>
-            <CardDescription className="text-lumina-text-secondary">Toggle core system functionalities on or off.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-white">Maintenance Mode</p>
-                <p className="text-sm text-lumina-text-secondary mt-1">Disable user logins and transactions temporarily.</p>
-              </div>
-              <div 
-                onClick={() => toggleFlag('MAINTENANCE_MODE')}
-                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.MAINTENANCE_MODE === 'true' ? 'bg-red-500' : 'bg-lumina-surface-light border border-lumina-border'}`}
-              >
-                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${settings.MAINTENANCE_MODE === 'true' ? 'right-0.5' : 'left-0.5 bg-lumina-text-tertiary'}`}></div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between border-t border-lumina-border/50 pt-6">
-              <div>
-                <p className="font-medium text-white">Require Manual Approval for Large Transfers</p>
-                <p className="text-sm text-lumina-text-secondary mt-1">Transactions over $10,000 will be flagged automatically.</p>
-              </div>
-              <div 
-                onClick={() => toggleFlag('REQUIRE_MANUAL_APPROVAL')}
-                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.REQUIRE_MANUAL_APPROVAL === 'true' ? 'bg-indigo-500' : 'bg-lumina-surface-light border border-lumina-border'}`}
-              >
-                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${settings.REQUIRE_MANUAL_APPROVAL === 'true' ? 'right-0.5' : 'left-0.5 bg-lumina-text-tertiary'}`}></div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between border-t border-lumina-border/50 pt-6">
-              <div>
-                <p className="font-medium text-white">New User Registration</p>
-                <p className="text-sm text-lumina-text-secondary mt-1">Allow new users to sign up via the public site.</p>
-              </div>
-              <div 
-                onClick={() => toggleFlag('NEW_USER_REGISTRATION')}
-                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.NEW_USER_REGISTRATION === 'true' ? 'bg-green-500' : 'bg-lumina-surface-light border border-lumina-border'}`}
-              >
-                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${settings.NEW_USER_REGISTRATION === 'true' ? 'right-0.5' : 'left-0.5 bg-lumina-text-tertiary'}`}></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Smartsupp Live Chat Configuration */}
-        <Card className="bg-lumina-surface border-lumina-border">
+        {/* Smartsupp Live Chat Configuration - Positioned prominently at top */}
+        <Card id="smartsupp-card" className="bg-lumina-surface border-lumina-border border-orange-500/30 shadow-md">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -215,7 +172,7 @@ export default function AdminSettingsPage() {
                   Smartsupp API / Project Key
                 </Label>
                 {settings.SMARTSUPP_KEY && (
-                  <span className="text-xs text-lumina-text-tertiary">
+                  <span className="text-xs text-lumina-text-tertiary font-mono">
                     {settings.SMARTSUPP_KEY.length} characters
                   </span>
                 )}
@@ -295,6 +252,54 @@ export default function AdminSettingsPage() {
                 <MessageCircle size={16} className="text-orange-400" />
                 Test Chat Widget
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Global System Flags */}
+        <Card className="bg-lumina-surface border-lumina-border">
+          <CardHeader>
+            <CardTitle className="text-lg text-white">Global System Flags</CardTitle>
+            <CardDescription className="text-lumina-text-secondary">Toggle core system functionalities on or off.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-white">Maintenance Mode</p>
+                <p className="text-sm text-lumina-text-secondary mt-1">Disable user logins and transactions temporarily.</p>
+              </div>
+              <div 
+                onClick={() => toggleFlag('MAINTENANCE_MODE')}
+                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.MAINTENANCE_MODE === 'true' ? 'bg-red-500' : 'bg-lumina-surface-light border border-lumina-border'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${settings.MAINTENANCE_MODE === 'true' ? 'right-0.5' : 'left-0.5 bg-lumina-text-tertiary'}`}></div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between border-t border-lumina-border/50 pt-6">
+              <div>
+                <p className="font-medium text-white">Require Manual Approval for Large Transfers</p>
+                <p className="text-sm text-lumina-text-secondary mt-1">Transactions over $10,000 will be flagged automatically.</p>
+              </div>
+              <div 
+                onClick={() => toggleFlag('REQUIRE_MANUAL_APPROVAL')}
+                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.REQUIRE_MANUAL_APPROVAL === 'true' ? 'bg-indigo-500' : 'bg-lumina-surface-light border border-lumina-border'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${settings.REQUIRE_MANUAL_APPROVAL === 'true' ? 'right-0.5' : 'left-0.5 bg-lumina-text-tertiary'}`}></div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between border-t border-lumina-border/50 pt-6">
+              <div>
+                <p className="font-medium text-white">New User Registration</p>
+                <p className="text-sm text-lumina-text-secondary mt-1">Allow new users to sign up via the public site.</p>
+              </div>
+              <div 
+                onClick={() => toggleFlag('NEW_USER_REGISTRATION')}
+                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.NEW_USER_REGISTRATION === 'true' ? 'bg-green-500' : 'bg-lumina-surface-light border border-lumina-border'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${settings.NEW_USER_REGISTRATION === 'true' ? 'right-0.5' : 'left-0.5 bg-lumina-text-tertiary'}`}></div>
+              </div>
             </div>
           </CardContent>
         </Card>

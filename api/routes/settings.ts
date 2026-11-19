@@ -22,7 +22,7 @@ router.get('/public', async (req, res) => {
       config[s.key] = s.value;
     });
     res.json(config);
-  } catch (error) {
+  } catch {
     res.json({
       SMARTSUPP_KEY: process.env.SMARTSUPP_KEY || 'a29b1125935b9e4e98019434f0cfae05fa0ee5e8',
       SMARTSUPP_ENABLED: 'true',

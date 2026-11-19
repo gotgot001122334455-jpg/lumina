@@ -1,27 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
-
-declare global {
-  interface Window {
-    _smartsupp?: {
-      key?: string;
-      [key: string]: any;
-    };
-    smartsupp?: any;
-    openSmartsuppChat?: () => void;
-  }
-}
-
-export function openSmartsuppChat() {
-  if (typeof window !== 'undefined' && window.smartsupp) {
-    try {
-      window.smartsupp('chat:open');
-    } catch (e) {
-      console.warn('Smartsupp open error:', e);
-    }
-  }
-}
+import { openSmartsuppChat, type SmartsuppFunction } from '@/lib/smartsupp';
 
 export function SmartsuppWidget() {
   const { user } = useAuth();
@@ -47,7 +27,7 @@ export function SmartsuppWidget() {
             try {
               window.smartsupp('chat:close');
               window.smartsupp('theme:hide');
-            } catch (e) {
+            } catch {
               // Ignore
             }
           }
@@ -63,7 +43,6 @@ export function SmartsuppWidget() {
         const existingScript = document.getElementById('smartsupp-script');
         if (existingScript && previousKey && previousKey !== key) {
           existingScript.remove();
-          // Remove existing widget DOM elements created by Smartsupp loader if present
           const existingWidget = document.getElementById('smartsupp-widget') || document.querySelector('iframe[src*="smartsupp"]');
           if (existingWidget) {
             existingWidget.remove();
@@ -72,8 +51,8 @@ export function SmartsuppWidget() {
         }
 
         if (!window.smartsupp && !document.getElementById('smartsupp-script')) {
-          const fn: any = function () {
-            (fn._ = fn._ || []).push(arguments);
+          const fn: SmartsuppFunction = function (...args: unknown[]) {
+            (fn._ = fn._ || []).push(args);
           };
           fn._ = [];
           window.smartsupp = fn;
@@ -88,7 +67,7 @@ export function SmartsuppWidget() {
         } else if (window.smartsupp) {
           try {
             window.smartsupp('theme:show');
-          } catch (e) {
+          } catch {
             // Ignore
           }
         }
@@ -99,7 +78,7 @@ export function SmartsuppWidget() {
             if (user.email) window.smartsupp('email', user.email);
             if (user.fullName) window.smartsupp('name', user.fullName);
             if (user.accountNumber) window.smartsupp('variables', { accountNumber: user.accountNumber });
-          } catch (e) {
+          } catch {
             // Ignore
           }
         }
